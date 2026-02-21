@@ -45,30 +45,27 @@ function syncUsers($db) {
     $users = json_decode(file_get_contents(USERS_JSON), true) ?? [];
 
     foreach ($users as $u) {
-        $email = trim($u['email'] ?? '');
-        $name = trim($u['name'] ?? '');
+        $email    = trim($u['email']    ?? '');
+        $name     = trim($u['name']     ?? '');
+        $password = trim($u['password'] ?? '');
         $is_admin = !empty($u['admin']) ? 1 : 0;
-        if (!$email || !$name) continue;
 
-        $stmt = $db->prepare("SELECT id, welcomed FROM users WHERE email = ?");
+        if (!$email || !$name || !$password) continue;
+
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$existing) {
-            // New user - generate temp password and send welcome email
-            $temp_pass = substr(str_shuffle('abcdefghijkmnpqrstuvwxyz23456789'), 0, 8);
-            $hash = password_hash($temp_pass, PASSWORD_DEFAULT);
-            $db->prepare("INSERT INTO users (name, email, password_hash, is_admin, welcomed) VALUES (?, ?, ?, ?, 0)")
+        if ($existing) {
+            // Update name, password and admin flag in case they changed
+            $db->prepare("UPDATE users SET name=?, password_hash=?, is_admin=? WHERE email=?")
+               ->execute([$name, $hash, $is_admin, $email]);
+        } else {
+            // New user - create account
+            $db->prepare("INSERT INTO users (name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)")
                ->execute([$name, $email, $hash, $is_admin]);
-            sendWelcomeEmail($email, $name, $temp_pass);
-            $db->prepare("UPDATE users SET welcomed=1 WHERE email=?")->execute([$email]);
         }
     }
-}
-
-function sendWelcomeEmail($email, $name, $password) {
-    $subject = "Välkommen till TidRapport!";
-    $body = "Hej $name!\n\nDu har fått ett konto på TidRapport.\n\nEmail: $email\nLösenord: $password\n\nLogga in på: https://astronauten.se/tid\n\nMvh\nTidRapport";
-    $headers = "From: " . FROM_NAME . " <" . FROM_EMAIL . ">\r\nContent-Type: text/plain; charset=UTF-8";
-    @mail($email, $subject, $body, $headers);
 }
