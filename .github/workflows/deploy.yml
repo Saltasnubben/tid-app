@@ -29,15 +29,43 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
+          local-dir: ./public/
+          server-dir: ./tid/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .github/**
+
+      - name: Deploy API via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./api/
+          server-dir: ./tid/api/
+
+      - name: Deploy users.json via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
           local-dir: ./
-          server-dir: /tid/
+          server-dir: ./tid/
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/src/**
+            **/public/**
+            **/api/**
+            .github/**
             index.html
             vite.config.js
             package*.json
-            .github/**
             README.md
+            .gitignore
