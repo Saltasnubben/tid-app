@@ -3,25 +3,30 @@ import React, { useState, useEffect } from 'react'
 const DAYS = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
 const MONTHS_SHORT = ['','Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec']
 
+const TODAY = new Date().toISOString().split('T')[0]
+const RAST_OPTIONS = [0, 15, 30, 45, 60, 90]
+
 export default function DayRow({ date, entry, saving, onSave }) {
   const d = new Date(date + 'T12:00:00')
   const dow = d.getDay()
   const isWeekend = dow === 0 || dow === 6
-  const [expanded, setExpanded] = useState(false)
+  const isToday = date === TODAY
+  const [expanded, setExpanded] = useState(isToday)
   const [form, setForm] = useState({
-    p1_start: '', p1_slut: '', p1_rast: '',
-    p2_start: '', p2_slut: '', p2_rast: '',
+    p1_start: '', p1_slut: '', p1_rast: '0',
+    p2_start: '', p2_slut: '', p2_rast: '0',
     anteckning: ''
   })
 
   useEffect(() => {
+    const hasData = entry.p1_start || entry.p1_slut
     setForm({
-      p1_start: entry.p1_start || '',
-      p1_slut:  entry.p1_slut  || '',
-      p1_rast:  entry.p1_rast  != null ? String(entry.p1_rast) : '',
+      p1_start: entry.p1_start || (isToday && !hasData ? '08:00' : ''),
+      p1_slut:  entry.p1_slut  || (isToday && !hasData ? '17:00' : ''),
+      p1_rast:  entry.p1_rast  != null ? String(entry.p1_rast) : '0',
       p2_start: entry.p2_start || '',
       p2_slut:  entry.p2_slut  || '',
-      p2_rast:  entry.p2_rast  != null ? String(entry.p2_rast) : '',
+      p2_rast:  entry.p2_rast  != null ? String(entry.p2_rast) : '0',
       anteckning: entry.anteckning || ''
     })
   }, [entry])
@@ -67,14 +72,22 @@ export default function DayRow({ date, entry, saving, onSave }) {
           <div style={s.row3}>
             <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" value={form.p1_start} onChange={e=>set('p1_start',e.target.value)}/></div>
             <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" value={form.p1_slut} onChange={e=>set('p1_slut',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Rast (min)</label><input style={s.inp} type="number" min="0" value={form.p1_rast} onChange={e=>set('p1_rast',e.target.value)} placeholder="0"/></div>
+            <div style={s.field}><label style={s.lbl}>Rast (min)</label>
+              <select style={s.inp} value={form.p1_rast} onChange={e=>set('p1_rast',e.target.value)}>
+                {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
+              </select>
+            </div>
           </div>
 
           <div style={s.passLabel}>Pass 2 (valfritt)</div>
           <div style={s.row3}>
             <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" value={form.p2_start} onChange={e=>set('p2_start',e.target.value)}/></div>
             <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" value={form.p2_slut} onChange={e=>set('p2_slut',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Rast (min)</label><input style={s.inp} type="number" min="0" value={form.p2_rast} onChange={e=>set('p2_rast',e.target.value)} placeholder="0"/></div>
+            <div style={s.field}><label style={s.lbl}>Rast (min)</label>
+              <select style={s.inp} value={form.p2_rast} onChange={e=>set('p2_rast',e.target.value)}>
+                {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
+              </select>
+            </div>
           </div>
 
           <div style={s.field}>
