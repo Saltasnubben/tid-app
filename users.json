@@ -1,13 +1,14 @@
 [
   {
-    "name": "Admin Adminsson",
-    "email": "admin@example.com",
-    "password": "ByttMig123",
+    "name": "Salta Snubben",
+    "email": "saltasnubben@hotmail.com",
+    "password": "TidRapport123",
     "admin": true
   },
   {
-    "name": "Anna Andersson",
-    "email": "anna@example.com",
-    "password": "ByttMig123"
+    "name": "Mattias Åkerlund",
+    "email": "mattias@mevida.se",
+    "password": "Test123",
+    "admin": false
   }
 ]
