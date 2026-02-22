@@ -1,0 +1,12 @@
+# Block direct access to sensitive files/directories
+<FilesMatch "\.(db|sqlite|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block lib directory (PHPMailer source)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^lib/ - [F,L]
+    RewriteRule ^data/ - [F,L]
+</IfModule>

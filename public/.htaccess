@@ -1,0 +1,11 @@
+# Block sensitive files
+<Files "users.json">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Block database and PHP source
+<FilesMatch "\.(db|sqlite|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
