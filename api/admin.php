@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'mail.php';
 
 requireAdmin();
 $db = getDB();
@@ -116,15 +117,13 @@ if ($action === 'send_reports') {
             $body_text = "Hej {$u['name']}!\n\nDin tidrapport för {$months_sv[$month]} $year:\n\n";
             $body_text .= implode("\n", $lines ?: ['(inga registrerade tider)']);
             $body_text .= "\n\nTotalt: {$total}h\nSchema: {$schema}h\nÖvertid: {$ot_str}h\n\nMvh\nTidRapport";
-            $headers = "From: " . FROM_NAME . " <" . FROM_EMAIL . ">\r\nContent-Type: text/plain; charset=UTF-8";
-            if (@mail($u['email'], $subject, $body_text, $headers)) $sent++;
+            if (sendMail($u['email'], $u['name'], $subject, $body_text)) $sent++;
         }
     }
 
     if ($send_to === 'admin' && $admin_email) {
         $subject = "Tidrapporter {$months_sv[$month]} $year";
-        $headers = "From: " . FROM_NAME . " <" . FROM_EMAIL . ">\r\nContent-Type: text/plain; charset=UTF-8";
-        if (@mail($admin_email, $subject, $combined_body, $headers)) $sent = count($users);
+        if (sendMail($admin_email, $admin_name, $subject, $combined_body)) $sent = count($users);
     }
 
     json_ok(['sent' => $sent, 'total' => count($users), 'month_name' => $months_sv[$month]]);

@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'mail.php';
 session_start();
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';

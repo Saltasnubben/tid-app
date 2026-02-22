@@ -1,8 +1,10 @@
 <?php
 define('DB_PATH', __DIR__ . '/data/tidrapport.db');
 define('USERS_JSON', __DIR__ . '/../users.json');
-define('FROM_EMAIL', 'noreply@astronauten.se');
-define('FROM_NAME', 'TidRapport');
+define('FROM_EMAIL', 'tidrapport@astronauten.se');
+define('FROM_NAME',  'TidRapport');
+define('SMTP_USER',  'tidrapport@astronauten.se');
+define('SMTP_PASS',  'Q_xUW9jU');
 
 // Schema hours per month
 define('SCHEMA_HOURS', [
