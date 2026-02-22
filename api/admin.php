@@ -12,6 +12,29 @@ if ($action === 'users') {
     json_ok($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
+// Get users.json content
+if ($action === 'get_users_json') {
+    if (!file_exists(USERS_JSON)) json_ok([]);
+    $users = json_decode(file_get_contents(USERS_JSON), true) ?? [];
+    json_ok($users);
+}
+
+// Save users.json content
+if ($action === 'save_users_json') {
+    $users = $body['users'] ?? [];
+    if (!is_array($users)) json_err('Ogiltigt format');
+
+    // Validate each user
+    foreach ($users as $u) {
+        if (empty($u['name']) || empty($u['email']) || empty($u['password'])) {
+            json_err('Namn, email och lösenord krävs för alla användare');
+        }
+    }
+
+    file_put_contents(USERS_JSON, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    json_ok(['count' => count($users)]);
+}
+
 // Get one user's month data
 if ($action === 'user_month') {
     $target_uid = intval($_GET['user_id']);
