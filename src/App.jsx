@@ -35,7 +35,7 @@ export default function App() {
         <nav style={styles.nav}>
           <button style={page==='timesheet'?styles.navActive:styles.navBtn} onClick={()=>setPage('timesheet')}>Månad</button>
           <button style={page==='summary'?styles.navActive:styles.navBtn} onClick={()=>setPage('summary')}>År</button>
-          {user.is_admin && <button style={page==='admin'?styles.navActive:styles.navBtn} onClick={()=>setPage('admin')}>Admin</button>}
+          {user.is_admin && <button style={page==='admin'?{...styles.navActive,fontSize:18,padding:'4px 10px'}:{...styles.navBtn,fontSize:18,padding:'4px 10px'}} onClick={()=>setPage('admin')}>⚙️</button>}
         </nav>
         <div style={{ display: 'flex', gap: 6 }}>
           <button style={styles.logout} onClick={() => setShowPwModal(true)}>🔑</button>
