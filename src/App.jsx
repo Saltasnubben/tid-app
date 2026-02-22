@@ -3,6 +3,7 @@ import Login from './pages/Login.jsx'
 import Timesheet from './pages/Timesheet.jsx'
 import Summary from './pages/Summary.jsx'
 import Admin from './pages/Admin.jsx'
+import ChangePassword from './pages/ChangePassword.jsx'
 
 const API = '/tid/api'
 
@@ -10,6 +11,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState('timesheet')
+  const [showPwModal, setShowPwModal] = useState(false)
 
   useEffect(() => {
     fetch(`${API}/auth.php?action=me`, { credentials: 'include' })
@@ -35,7 +37,10 @@ export default function App() {
           <button style={page==='summary'?styles.navActive:styles.navBtn} onClick={()=>setPage('summary')}>År</button>
           {user.is_admin && <button style={page==='admin'?styles.navActive:styles.navBtn} onClick={()=>setPage('admin')}>Admin</button>}
         </nav>
-        <button style={styles.logout} onClick={logout}>Logga ut</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button style={styles.logout} onClick={() => setShowPwModal(true)}>🔑</button>
+          <button style={styles.logout} onClick={logout}>Logga ut</button>
+        </div>
       </header>
 
       <main style={styles.main}>
@@ -43,6 +48,8 @@ export default function App() {
         {page === 'summary'   && <Summary   API={API} />}
         {page === 'admin'     && <Admin     API={API} />}
       </main>
+
+      {showPwModal && <ChangePassword API={API} onClose={() => setShowPwModal(false)} />}
     </div>
   )
 }

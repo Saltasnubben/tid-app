@@ -23,6 +23,7 @@ if ($action === 'login') {
 
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['name'];
+    $_SESSION['user_email'] = $user['email'];
     $_SESSION['is_admin'] = (bool)$user['is_admin'];
 
     json_ok(['name' => $user['name'], 'is_admin' => (bool)$user['is_admin']]);
@@ -36,6 +37,28 @@ if ($action === 'logout') {
 if ($action === 'me') {
     if (empty($_SESSION['user_id'])) json_err('Ej inloggad', 401);
     json_ok(['name' => $_SESSION['user_name'], 'is_admin' => (bool)$_SESSION['is_admin']]);
+}
+
+if ($action === 'change_password') {
+    $uid = requireAuth();
+    $current  = $body['current']  ?? '';
+    $new_pass = $body['new_pass'] ?? '';
+    if (!$current || !$new_pass) json_err('Fyll i båda fälten');
+    if (strlen($new_pass) < 6) json_err('Lösenordet måste vara minst 6 tecken');
+
+    $db = getDB();
+    $stmt = $db->prepare("SELECT password_hash FROM users WHERE id=?");
+    $stmt->execute([$uid]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user || !password_verify($current, $user['password_hash'])) {
+        json_err('Fel nuvarande lösenord', 401);
+    }
+
+    $db->prepare("UPDATE users SET password_hash=? WHERE id=?")
+       ->execute([password_hash($new_pass, PASSWORD_DEFAULT), $uid]);
+
+    json_ok();
 }
 
 json_err('Okänd åtgärd');

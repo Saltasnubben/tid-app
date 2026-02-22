@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 const DAYS = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
 const MONTHS_SHORT = ['','Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec']
@@ -11,7 +11,14 @@ export default function DayRow({ date, entry, saving, onSave }) {
   const dow = d.getDay()
   const isWeekend = dow === 0 || dow === 6
   const isToday = date === TODAY
+  const rowRef = useRef(null)
   const [expanded, setExpanded] = useState(isToday)
+
+  useEffect(() => {
+    if (isToday && rowRef.current) {
+      setTimeout(() => rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)
+    }
+  }, [])
   const [form, setForm] = useState({
     p1_start: '', p1_slut: '', p1_rast: '0',
     p2_start: '', p2_slut: '', p2_rast: '0',
@@ -50,7 +57,7 @@ export default function DayRow({ date, entry, saving, onSave }) {
   const hasData = hours > 0
 
   return (
-    <div style={{...s.row, background: isWeekend ? '#1a2744' : '#1e293b', opacity: isWeekend ? 0.7 : 1}}>
+    <div ref={rowRef} style={{...s.row, background: isWeekend ? '#1a2744' : '#1e293b', opacity: isWeekend ? 0.7 : 1, outline: isToday ? '2px solid #3b82f6' : 'none'}}>
       <div style={s.header} onClick={() => setExpanded(e => !e)}>
         <div style={s.dateBlock}>
           <div style={{...s.dow, color: isWeekend ? '#64748b' : '#94a3b8'}}>{DAYS[dow]}</div>
@@ -70,8 +77,8 @@ export default function DayRow({ date, entry, saving, onSave }) {
         <div style={s.form}>
           <div style={s.passLabel}>Pass 1</div>
           <div style={s.row3}>
-            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" value={form.p1_start} onChange={e=>set('p1_start',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" value={form.p1_slut} onChange={e=>set('p1_slut',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" step="900" value={form.p1_start} onChange={e=>set('p1_start',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" step="900" value={form.p1_slut} onChange={e=>set('p1_slut',e.target.value)}/></div>
             <div style={s.field}><label style={s.lbl}>Rast (min)</label>
               <select style={s.inp} value={form.p1_rast} onChange={e=>set('p1_rast',e.target.value)}>
                 {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
@@ -81,8 +88,8 @@ export default function DayRow({ date, entry, saving, onSave }) {
 
           <div style={s.passLabel}>Pass 2 (valfritt)</div>
           <div style={s.row3}>
-            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" value={form.p2_start} onChange={e=>set('p2_start',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" value={form.p2_slut} onChange={e=>set('p2_slut',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" step="900" value={form.p2_start} onChange={e=>set('p2_start',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" step="900" value={form.p2_slut} onChange={e=>set('p2_slut',e.target.value)}/></div>
             <div style={s.field}><label style={s.lbl}>Rast (min)</label>
               <select style={s.inp} value={form.p2_rast} onChange={e=>set('p2_rast',e.target.value)}>
                 {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
