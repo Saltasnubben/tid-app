@@ -129,4 +129,14 @@ if ($action === 'send_reports') {
     json_ok(['sent' => $sent, 'total' => count($users), 'month_name' => $months_sv[$month]]);
 }
 
+// Delete user
+if ($action === 'delete_user') {
+    $uid = intval($body['user_id'] ?? 0);
+    if (!$uid) json_err('Ogiltigt user_id');
+    if ($uid === intval($_SESSION['user_id'])) json_err('Kan inte ta bort dig själv');
+    $db->prepare("DELETE FROM entries WHERE user_id=?")->execute([$uid]);
+    $db->prepare("DELETE FROM users WHERE id=?")->execute([$uid]);
+    json_ok();
+}
+
 json_err('Okänd åtgärd');
