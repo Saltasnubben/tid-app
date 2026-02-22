@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import TimeInput from './TimeInput.jsx'
 
 const DAYS = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
 const MONTHS_SHORT = ['','Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec']
@@ -77,8 +78,8 @@ export default function DayRow({ date, entry, saving, onSave }) {
         <div style={s.form}>
           <div style={s.passLabel}>Pass 1</div>
           <div style={s.row3}>
-            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" step="900" value={form.p1_start} onChange={e=>set('p1_start',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" step="900" value={form.p1_slut} onChange={e=>set('p1_slut',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Start</label><TimeInput style={s.inp} value={form.p1_start} onChange={v=>set('p1_start',v)}/></div>
+            <div style={s.field}><label style={s.lbl}>Slut</label><TimeInput style={s.inp} value={form.p1_slut} onChange={v=>set('p1_slut',v)}/></div>
             <div style={s.field}><label style={s.lbl}>Rast (min)</label>
               <select style={s.inp} value={form.p1_rast} onChange={e=>set('p1_rast',e.target.value)}>
                 {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
@@ -88,8 +89,8 @@ export default function DayRow({ date, entry, saving, onSave }) {
 
           <div style={s.passLabel}>Pass 2 (valfritt)</div>
           <div style={s.row3}>
-            <div style={s.field}><label style={s.lbl}>Start</label><input style={s.inp} type="time" step="900" value={form.p2_start} onChange={e=>set('p2_start',e.target.value)}/></div>
-            <div style={s.field}><label style={s.lbl}>Slut</label><input style={s.inp} type="time" step="900" value={form.p2_slut} onChange={e=>set('p2_slut',e.target.value)}/></div>
+            <div style={s.field}><label style={s.lbl}>Start</label><TimeInput style={s.inp} value={form.p2_start} onChange={v=>set('p2_start',v)}/></div>
+            <div style={s.field}><label style={s.lbl}>Slut</label><TimeInput style={s.inp} value={form.p2_slut} onChange={v=>set('p2_slut',v)}/></div>
             <div style={s.field}><label style={s.lbl}>Rast (min)</label>
               <select style={s.inp} value={form.p2_rast} onChange={e=>set('p2_rast',e.target.value)}>
                 {RAST_OPTIONS.map(v=><option key={v} value={v}>{v} min</option>)}
