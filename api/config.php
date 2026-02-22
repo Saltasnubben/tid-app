@@ -57,10 +57,13 @@ function initDB($db) {
             p2_slut TEXT,
             p2_rast INTEGER DEFAULT 0,
             anteckning TEXT,
+            day_type TEXT DEFAULT 'work',
             UNIQUE(user_id, date),
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
     ");
+    // Migration: add day_type if table already exists without it
+    try { $db->exec("ALTER TABLE entries ADD COLUMN day_type TEXT DEFAULT 'work'"); } catch (Exception $e) {}
 }
 
 function json_ok($data = []) {
