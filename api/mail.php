@@ -6,7 +6,7 @@ require_once __DIR__ . '/lib/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function sendMail($to_email, $to_name, $subject, $body) {
+function sendMail($to_email, $to_name, $subject, $body, $attachments = []) {
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
@@ -22,6 +22,10 @@ function sendMail($to_email, $to_name, $subject, $body) {
         $mail->Subject = $subject;
         $mail->Body    = $body;
         $mail->isHTML(false);
+        // Add PDF attachments: [['data' => '...', 'filename' => 'report.pdf'], ...]
+        foreach ($attachments as $att) {
+            $mail->addStringAttachment($att['data'], $att['filename'], 'base64', 'application/pdf');
+        }
         $mail->send();
         return true;
     } catch (Exception $e) {

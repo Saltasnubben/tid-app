@@ -1,6 +1,7 @@
 <?php
 require_once 'config.php';
 require_once 'mail.php';
+require_once 'pdf.php';
 
 requireAdmin();
 $db = getDB();
@@ -86,6 +87,7 @@ if ($action === 'send_reports') {
     $admin_name  = $_SESSION['user_name']  ?? 'Admin';
     $combined_body = "Tidrapporter för {$months_sv[$month]} $year\n";
     $combined_body .= str_repeat('=', 40) . "\n\n";
+    $combined_pdfs = [];
 
     foreach ($users as $u) {
         $stmt2 = $db->prepare("SELECT * FROM entries WHERE user_id=? AND date LIKE ? ORDER BY date");
@@ -108,22 +110,30 @@ if ($action === 'send_reports') {
         $overtime = round($total - $schema, 2);
         $ot_str   = $overtime >= 0 ? "+$overtime" : "$overtime";
 
+        // Build entry map for PDF
+        $entryMap = [];
+        foreach ($rows as $r) { $entryMap[$r['date']] = $r; }
+
+        // Generate PDF
+        $pdfData  = generateTimesheetPDF($u['name'], $year, $month, $entryMap);
+        $pdfFile  = "tidrapport_{$u['name']}_{$year}_{$months_sv[$month]}.pdf";
+        $pdfAtt   = [['data' => $pdfData, 'filename' => $pdfFile]];
+
         if ($send_to === 'admin') {
             $combined_body .= "{$u['name']}\n" . str_repeat('-', 30) . "\n";
             $combined_body .= implode("\n", $lines ?: ['  (inga registrerade tider)']);
             $combined_body .= "\n  Totalt: {$total}h | Schema: {$schema}h | Övertid: {$ot_str}h\n\n";
+            $combined_pdfs[] = $pdfAtt[0];
         } else {
             $subject   = "Tidrapport {$months_sv[$month]} $year";
-            $body_text = "Hej {$u['name']}!\n\nDin tidrapport för {$months_sv[$month]} $year:\n\n";
-            $body_text .= implode("\n", $lines ?: ['(inga registrerade tider)']);
-            $body_text .= "\n\nTotalt: {$total}h\nSchema: {$schema}h\nÖvertid: {$ot_str}h\n\nMvh\nTidRapport";
-            if (sendMail($u['email'], $u['name'], $subject, $body_text)) $sent++;
+            $body_text = "Hej {$u['name']}!\n\nBilaga: Din tidrapport för {$months_sv[$month]} $year.\n\nMvh\nTidRapport";
+            if (sendMail($u['email'], $u['name'], $subject, $body_text, $pdfAtt)) $sent++;
         }
     }
 
     if ($send_to === 'admin' && $admin_email) {
         $subject = "Tidrapporter {$months_sv[$month]} $year";
-        if (sendMail($admin_email, $admin_name, $subject, $combined_body)) $sent = count($users);
+        if (sendMail($admin_email, $admin_name, $subject, $combined_body, $combined_pdfs ?? [])) $sent = count($users);
     }
 
     json_ok(['sent' => $sent, 'total' => count($users), 'month_name' => $months_sv[$month]]);
