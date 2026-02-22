@@ -38,7 +38,7 @@ function generateTimesheetPDF($name, $year, $month, $entries) {
 
     $pdf->SetFont('Arial', '', 11);
     $pdf->SetTextColor(60, 60, 60);
-    $pdf->Cell(0, 6, sv("$name  —  {$MONTHS_SV[$month]} $year"), 0, 1, 'C');
+    $pdf->Cell(0, 6, sv("$name - {$MONTHS_SV[$month]} $year"), 0, 1, 'C');
     $pdf->Ln(4);
 
     // Table header
@@ -103,14 +103,14 @@ function generateTimesheetPDF($name, $year, $month, $entries) {
         elseif ($e) $ant = $e['anteckning'] ?? '';
 
         $row = [
-            [$date,                 28, 'C'],
-            [$DAYS_SV[$dow],        10, 'C'],
-            [$p1s,                  20, 'C'],
-            [$p1e,                  20, 'C'],
-            [$p2s,                  20, 'C'],
-            [$p2e,                  20, 'C'],
-            [$h_str,                18, 'C'],
-            [sv(mb_substr($ant,0,35)), 50, 'L'],
+            [$date,                         28, 'C'],
+            [sv($DAYS_SV[$dow]),            10, 'C'],
+            [$p1s,                          20, 'C'],
+            [$p1e,                          20, 'C'],
+            [$p2s,                          20, 'C'],
+            [$p2e,                          20, 'C'],
+            [$h_str,                        18, 'C'],
+            [sv(mb_substr($ant, 0, 35)),    50, 'L'],
         ];
 
         foreach ($row as [$val, $w, $align]) {
