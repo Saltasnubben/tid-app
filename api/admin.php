@@ -139,4 +139,81 @@ if ($action === 'delete_user') {
     json_ok();
 }
 
+// Download CSV template for a given user + month
+if ($action === 'csv_template') {
+    $year  = intval($body['year']  ?? date('Y'));
+    $month = intval($body['month'] ?? date('n'));
+    $uid   = intval($body['user_id'] ?? 0);
+
+    $user = null;
+    if ($uid) {
+        $s = $db->prepare("SELECT name FROM users WHERE id=?");
+        $s->execute([$uid]); $user = $s->fetch(PDO::FETCH_ASSOC);
+    }
+    $username = $user ? $user['name'] : 'Okand';
+    $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="tidrapport_' . $year . '_' . str_pad($month,2,'0',STR_PAD_LEFT) . '_' . preg_replace('/\s+/','_',$username) . '.csv"');
+    // BOM for Excel UTF-8
+    echo "\xEF\xBB\xBF";
+    echo "Datum,P1 Start,P1 Slut,P2 Start,P2 Slut,Rast (min),Anteckning\n";
+    for ($d = 1; $d <= $days; $d++) {
+        $date = sprintf('%04d-%02d-%02d', $year, $month, $d);
+        $dow  = date('N', strtotime($date)); // 6=Sat, 7=Sun
+        if ($dow >= 6) continue; // Skip weekends
+        echo "$date,08:00,17:00,,,60,\n";
+    }
+    exit;
+}
+
+// Import CSV timesheet data for a user
+if ($action === 'import_csv') {
+    $uid = intval($_POST['user_id'] ?? 0);
+    if (!$uid) json_err('Välj en användare');
+    if (empty($_FILES['file'])) json_err('Ingen fil uppladdad');
+
+    $file = $_FILES['file']['tmp_name'];
+    if (!$file || !is_readable($file)) json_err('Kunde inte läsa filen');
+
+    $handle = fopen($file, 'r');
+    if (!$handle) json_err('Kunde inte öppna filen');
+
+    // Skip BOM if present
+    $bom = fread($handle, 3);
+    if ($bom !== "\xEF\xBB\xBF") rewind($handle);
+
+    // Skip header row
+    fgetcsv($handle);
+
+    $inserted = 0; $skipped = 0; $errors = [];
+    $stmt = $db->prepare("
+        INSERT INTO entries (user_id, date, p1_start, p1_slut, p2_start, p2_slut, rast, note)
+        VALUES (?,?,?,?,?,?,?,?)
+        ON CONFLICT(user_id, date) DO UPDATE SET
+            p1_start=excluded.p1_start, p1_slut=excluded.p1_slut,
+            p2_start=excluded.p2_start, p2_slut=excluded.p2_slut,
+            rast=excluded.rast, note=excluded.note
+    ");
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (empty($row[0])) continue;
+        $date = trim($row[0]);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $errors[] = "Ogiltigt datum: $date"; $skipped++; continue;
+        }
+        $p1s = trim($row[1] ?? ''); $p1e = trim($row[2] ?? '');
+        $p2s = trim($row[3] ?? ''); $p2e = trim($row[4] ?? '');
+        $rast = intval($row[5] ?? 0);
+        $note = trim($row[6] ?? '');
+
+        // Normalize time values
+        $clean = function($t) { return preg_match('/^\d{2}:\d{2}$/', $t) ? $t : null; };
+        $stmt->execute([$uid, $date, $clean($p1s), $clean($p1e), $clean($p2s), $clean($p2e), $rast, $note]);
+        $inserted++;
+    }
+    fclose($handle);
+    json_ok(['inserted' => $inserted, 'skipped' => $skipped, 'errors' => $errors]);
+}
+
 json_err('Okänd åtgärd');
