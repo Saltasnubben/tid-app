@@ -187,31 +187,40 @@ if ($action === 'import_csv') {
     fgetcsv($handle);
 
     $inserted = 0; $skipped = 0; $errors = [];
-    $stmt = $db->prepare("
-        INSERT INTO entries (user_id, date, p1_start, p1_slut, p2_start, p2_slut, rast, note)
-        VALUES (?,?,?,?,?,?,?,?)
-        ON CONFLICT(user_id, date) DO UPDATE SET
-            p1_start=excluded.p1_start, p1_slut=excluded.p1_slut,
-            p2_start=excluded.p2_start, p2_slut=excluded.p2_slut,
-            rast=excluded.rast, note=excluded.note
-    ");
 
-    while (($row = fgetcsv($handle)) !== false) {
-        if (empty($row[0])) continue;
-        $date = trim($row[0]);
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            $errors[] = "Ogiltigt datum: $date"; $skipped++; continue;
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO entries (user_id, date, p1_start, p1_slut, p1_rast, p2_start, p2_slut, p2_rast, anteckning, day_type)
+            VALUES (?,?,?,?,?,?,?,?,?,'work')
+            ON CONFLICT(user_id, date) DO UPDATE SET
+                p1_start=excluded.p1_start, p1_slut=excluded.p1_slut, p1_rast=excluded.p1_rast,
+                p2_start=excluded.p2_start, p2_slut=excluded.p2_slut, p2_rast=excluded.p2_rast,
+                anteckning=excluded.anteckning
+        ");
+
+        $clean = function($t) { $t = trim($t); return preg_match('/^\d{1,2}:\d{2}$/', $t) ? $t : null; };
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (empty($row[0])) continue;
+            $date = trim($row[0]);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                $errors[] = "Ogiltigt datum: $date"; $skipped++; continue;
+            }
+            $p1s  = $clean($row[1] ?? '');
+            $p1e  = $clean($row[2] ?? '');
+            $p2s  = $clean($row[3] ?? '');
+            $p2e  = $clean($row[4] ?? '');
+            $rast = intval($row[5] ?? 0);
+            $ant  = trim($row[6] ?? '');
+
+            $stmt->execute([$uid, $date, $p1s, $p1e, $rast, $p2s, $p2e, 0, $ant ?: null]);
+            $inserted++;
         }
-        $p1s = trim($row[1] ?? ''); $p1e = trim($row[2] ?? '');
-        $p2s = trim($row[3] ?? ''); $p2e = trim($row[4] ?? '');
-        $rast = intval($row[5] ?? 0);
-        $note = trim($row[6] ?? '');
-
-        // Normalize time values
-        $clean = function($t) { return preg_match('/^\d{2}:\d{2}$/', $t) ? $t : null; };
-        $stmt->execute([$uid, $date, $clean($p1s), $clean($p1e), $clean($p2s), $clean($p2e), $rast, $note]);
-        $inserted++;
+    } catch (Exception $e) {
+        fclose($handle);
+        json_err('Databasfel: ' . $e->getMessage());
     }
+
     fclose($handle);
     json_ok(['inserted' => $inserted, 'skipped' => $skipped, 'errors' => $errors]);
 }

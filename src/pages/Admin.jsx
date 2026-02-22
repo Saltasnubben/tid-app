@@ -103,9 +103,20 @@ export default function Admin({ API }) {
     const fd = new FormData()
     fd.append('user_id', impUserId)
     fd.append('file', impFile)
-    const r = await fetch(`${API}/admin.php?action=import_csv`, {
-      method: 'POST', credentials: 'include', body: fd
-    }).then(r => r.json())
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000)
+    let r
+    try {
+      r = await fetch(`${API}/admin.php?action=import_csv`, {
+        method: 'POST', credentials: 'include', body: fd, signal: controller.signal
+      }).then(r => r.json())
+    } catch (e) {
+      clearTimeout(timeout)
+      setImporting(false)
+      setImpMsg('❌ Timeout — försök med en mindre fil eller logga ut och in igen')
+      return
+    }
+    clearTimeout(timeout)
     setImporting(false)
     if (r.ok) {
       const d = r.data
